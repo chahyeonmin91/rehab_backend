@@ -20,7 +20,7 @@ jobs:
           envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
-            cd /home/ubuntu/rehab-server
+            cd /home/ubuntu/rehab-backend
             git pull origin main
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
             ./gradlew clean build
