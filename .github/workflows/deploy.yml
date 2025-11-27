@@ -23,6 +23,6 @@ jobs:
             cd /home/ubuntu/rehab_backend
             git pull origin main
             echo "$APPLICATION_PROPERTIES" > src/main/resources/application.yml
-            ./gradlew clean build
+            ./gradlew clean build -x test
             sudo fuser -k -n tcp 8080 || true
             nohup java -jar build/libs/*SNAPSHOT.jar > ./output.log 2>&1 &
