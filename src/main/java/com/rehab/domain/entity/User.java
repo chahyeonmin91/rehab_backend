@@ -40,7 +40,20 @@ public class User extends BaseEntity {
     @Column(name = "gender")
     private Gender gender;
 
-    @Column(name = "profile_image_url")
+	@Enumerated(EnumType.STRING)
+	@Column(name = "height")
+	private Float height;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "weight")
+	private Float weight;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "age")
+	private Integer age;
+
+
+	@Column(name = "profile_image_url")
     private String profileImageUrl;
 
     @Enumerated(EnumType.STRING)
