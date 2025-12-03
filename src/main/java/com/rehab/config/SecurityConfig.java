@@ -33,6 +33,8 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.csrf(csrf -> csrf.disable())
+			.formLogin(form -> form.disable())
+			.httpBasic(basic -> basic.disable())
 			.sessionManagement(session ->
 				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
@@ -41,15 +43,18 @@ public class SecurityConfig {
 					"/",
 					"/health",
 					"/auth/**",
+					"/temp/**",
+					"/login/oauth2/**",
 					"/oauth2/**",
 					"/swagger-ui/**",
+					"/swagger-ui.html",
 					"/v3/api-docs/**"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth2 -> oauth2
 					.loginPage("/oauth2/authorization/kakao")
-					.failureUrl("/auth/login-failure")
+					//.failureUrl("/auth/login-failure")
 					.userInfoEndpoint(userInfo -> {
 							userInfo.userService(customOAuth2UserService);
 						})
