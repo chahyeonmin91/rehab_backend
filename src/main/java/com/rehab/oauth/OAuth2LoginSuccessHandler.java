@@ -48,12 +48,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getRole().toString(),null);
 		String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId(), user.getRole().toString());
 
-		// 3) 프론트로 리다이렉트 (RN에서 받을 URL)
-		String redirectUrl = "http://52.78.170.78:8080/auth/login-success"
-			+ "?access=" + accessToken
-			+ "&refresh=" + refreshToken
-			+ "&userId=" + user.getUserId();
+		// redirect 대신 JSON 응답
+		//프론트가 나중에 만들어지면 그때 다시 redirect 코드
+		response.setContentType("application/json; charset=UTF-8");
+		String json = String.format(
+			"{\"access\":\"%s\", \"refresh\":\"%s\", \"userId\":%d}",
+			accessToken, refreshToken, user.getUserId()
+		);
 
-		response.sendRedirect(redirectUrl);
+		response.getWriter().write(json);
 	}
 }
