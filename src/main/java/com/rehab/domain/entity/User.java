@@ -59,7 +59,15 @@ public class User extends BaseEntity {
     @Column(name = "fcm_token")
     private String fcmToken;
 
-    // 연관관계
+	//소셜 로그인용 필드
+	@Column(name = "provider")
+	private String provider;  // "kakao"
+
+	@Column(name = "provider_id", unique = true)
+	private String providerId;   // 카카오의 회원 고유번호
+
+
+	// 연관관계
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Address> addresses = new ArrayList<>();
@@ -107,4 +115,17 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<AuditLog> auditLogs = new ArrayList<>();
+
+	public static User createKakaoUser(String providerId, String email, String nickname, String profileImage) {
+		return User.builder()
+			.provider("kakao")
+			.providerId(providerId)
+			.email(email)
+			.nickname(nickname)
+			.profileImageUrl(profileImage)
+			.role(UserRole.USER)
+			.currentStreak(0)
+			.maxStreak(0)
+			.build();
+	}
 }
