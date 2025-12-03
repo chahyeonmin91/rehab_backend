@@ -1,6 +1,8 @@
 package com.rehab.config;
 
 import com.rehab.domain.repository.UserRepository;
+import com.rehab.oauth.CustomOAuth2UserService;
+import com.rehab.oauth.OAuth2LoginSuccessHandler;
 import com.rehab.security.jwt.JwtAuthenticationFilter;
 import com.rehab.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,9 @@ public class SecurityConfig {
 
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserRepository userRepository;
+	private final CustomOAuth2UserService customOAuth2UserService;
+	private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,16 +47,17 @@ public class SecurityConfig {
 				).permitAll()
 				.anyRequest().authenticated()
 			)
-			.oauth2Login(oauth2 -> oauth2
-				.loginPage("/oauth2/authorization/google")
-				.defaultSuccessUrl("/auth/login-success", true)
-				.failureUrl("/auth/login-failure")
-				.userInfoEndpoint(userInfo -> {
-					// 이후에 CustomOAuth2UserService 넣을 자리
-					// userInfo.userService(customOAuth2UserService);
-				})
-			)
-			.httpBasic(httpBasic -> httpBasic.disable())
+				.oauth2Login(oauth2 -> oauth2
+						.loginPage("/oauth2/authorization/kakao")
+						.defaultSuccessUrl("/auth/login-success", true)
+						.failureUrl("/auth/login-failure")
+						.userInfoEndpoint(userInfo -> {
+							userInfo.userService(customOAuth2UserService);
+						})
+						.successHandler(oAuth2LoginSuccessHandler)
+				)
+
+				.httpBasic(httpBasic -> httpBasic.disable())
 			.formLogin(form -> form.disable())
 			.logout(logout -> logout.disable());
 
