@@ -47,17 +47,14 @@ public class SecurityConfig {
 				).permitAll()
 				.anyRequest().authenticated()
 			)
-				.oauth2Login(oauth2 -> oauth2
-						.loginPage("/oauth2/authorization/kakao")
-						.defaultSuccessUrl("/auth/login-success", true)
-						.failureUrl("/auth/login-failure")
-						.userInfoEndpoint(userInfo -> {
-							userInfo.userService(customOAuth2UserService);
-						})
-						.successHandler(oAuth2LoginSuccessHandler)
-				)
-
-				.httpBasic(httpBasic -> httpBasic.disable())
+			.oauth2Login(oauth2 -> oauth2
+					// loginPage 직접 지정 안 함 (기본 /login 안 써도 됨)
+					.userInfoEndpoint(userInfo -> userInfo
+							.userService(customOAuth2UserService)
+					)
+					.successHandler(oAuth2LoginSuccessHandler)
+			)
+			.httpBasic(httpBasic -> httpBasic.disable())
 			.formLogin(form -> form.disable())
 			.logout(logout -> logout.disable());
 
