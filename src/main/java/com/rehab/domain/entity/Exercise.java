@@ -1,7 +1,9 @@
 package com.rehab.domain.entity;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -67,11 +69,11 @@ public class Exercise extends BaseEntity {
     // 연관관계
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ExerciseMedia> exerciseMedias = new ArrayList<>();
+    private Set<ExerciseMedia> exerciseMedias = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ExerciseImage> exerciseImages = new ArrayList<>();
+    private Set<ExerciseImage> exerciseImages = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
