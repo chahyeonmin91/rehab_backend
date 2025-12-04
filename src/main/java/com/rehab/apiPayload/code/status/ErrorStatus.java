@@ -32,6 +32,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
 
 	/// 멤버 관련 에러
+	USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다."),
 	MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다."),
 	NICKNAME_NOT_EXIST(HttpStatus.BAD_REQUEST, "MEMBER4002", "닉네임은 필수 입니다."),
 	MEMBERS_ROLE_IS_USER(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자의 ROLE이 USER입니다."),
@@ -47,6 +48,25 @@ public enum ErrorStatus implements BaseErrorCode {
 	AUTH_USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A004", "refreshToken에 해당하는 유저를 찾지 못했습니다."),
 	AUTH_STORED_REFRESH_NULL(HttpStatus.UNAUTHORIZED, "A005", "저장된 refreshToken이 null값입니다."),
 	AUTH_REFRESH_MISMATCH(HttpStatus.UNAUTHORIZED, "A006", "refreshToken이 mismatch입니다."),
+
+	// 재활 플랜
+	REHAB_PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAN_001", "재활 플랜을 찾을 수 없습니다."),
+	NO_ACTIVE_PLAN(HttpStatus.NOT_FOUND, "PLAN_002", "활성화된 재활 플랜이 없습니다."),
+
+	// 플랜 항목
+	PLAN_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "PLAN_003", "플랜 항목을 찾을 수 없습니다."),
+
+	// 운동
+	EXERCISE_NOT_FOUND(HttpStatus.NOT_FOUND, "EXERCISE_001", "운동 정보를 찾을 수 없습니다."),
+
+	// 운동 로그
+	EXERCISE_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "LOG_001", "운동 로그를 찾을 수 없습니다."),
+	INVALID_PAIN_SCORE(HttpStatus.BAD_REQUEST, "LOG_002", "통증 점수는 1-10 사이여야 합니다."),
+	INVALID_COMPLETION_RATE(HttpStatus.BAD_REQUEST, "LOG_003", "완료율은 0-100 사이여야 합니다."),
+
+	// 일일 요약
+	DAILY_SUMMARY_NOT_FOUND(HttpStatus.NOT_FOUND, "SUMMARY_001", "일일 요약을 찾을 수 없습니다."),
+
 	;
 
 	private final HttpStatus httpStatus;
