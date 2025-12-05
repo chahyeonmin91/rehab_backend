@@ -34,7 +34,7 @@ public class RehabPlanController {
 	@Operation(summary = "현재 활성 플랜 조회", description = "사용자의 현재 활성화된 재활 플랜을 조회합니다.")
 	public ApiResponse<RehabPlanResponse> getCurrentPlan(
 		@Parameter(description = "사용자 ID", required = true)
-		@RequestAttribute("userId") Long userId
+		@RequestParam("userId") Long userId
 	) {
 		log.info("API 호출: 현재 활성 플랜 조회 - userId: {}", userId);
 		RehabPlanResponse response = rehabPlanService.getCurrentPlan(userId);

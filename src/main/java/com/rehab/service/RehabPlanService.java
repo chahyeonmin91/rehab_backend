@@ -75,7 +75,7 @@ public class RehabPlanService {
 		Set<Long> completedPlanItemIds = Set.of();
 		if (date != null) {
 			List<ExerciseLog> logs = exerciseLogRepository.findByUserIdAndDate(
-				rehabPlan.getUser().getUserId(), date);
+				rehabPlan.getUser().getUserId(), date.atStartOfDay());
 			completedPlanItemIds = logs.stream()
 				.map(log -> log.getPlanItem().getPlanItemId())
 				.collect(Collectors.toSet());
