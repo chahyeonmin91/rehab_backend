@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,7 +70,7 @@ public class ExerciseLogService {
 		ExerciseLog savedLog = exerciseLogRepository.save(exerciseLog);
 
 		// 일일 요약 업데이트
-		LocalDate logDate = request.getLoggedAt().toLocalDate();
+		LocalDateTime logDate = request.getLoggedAt().toLocalDate().atTime(LocalTime.now());
 		dailySummaryService.updateDailySummary(userId, logDate);
 
 		log.info("운동 로그 생성 완료 - exerciseLogId: {}", savedLog.getExerciseLogId());
@@ -76,20 +78,25 @@ public class ExerciseLogService {
 		return convertToExerciseLogResponse(savedLog);
 	}
 
+
 	/**
 	 * 특정 날짜 운동 로그 조회
 	 */
 	public ExerciseLogListResponse getExerciseLogsByDate(Long userId, LocalDate date) {
 		log.info("운동 로그 조회 - userId: {}, date: {}", userId, date);
 
-		List<ExerciseLog> logs = exerciseLogRepository.findByUserIdAndDate(userId, date);
+		LocalDateTime startOfDay = date.atStartOfDay();
+		LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+		List<ExerciseLog> logs = exerciseLogRepository
+			.findByUser_UserIdAndLoggedAtBetween(userId, startOfDay, endOfDay);
 
 		List<ExerciseLogResponse> logResponses = logs.stream()
 			.map(this::convertToExerciseLogResponse)
 			.collect(Collectors.toList());
 
 		return ExerciseLogListResponse.builder()
-			.date(date)
+			.date(date.atStartOfDay()) // 혹은 그냥 date 저장하고 싶으면 필드 타입을 LocalDate로
 			.logs(logResponses)
 			.build();
 	}

@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 운동 로그 컨트롤러
@@ -37,7 +38,7 @@ public class ExerciseLogController {
 	@Operation(summary = "운동 로그 생성", description = "운동 수행 기록을 생성합니다.")
 	public ApiResponse<ExerciseLogResponse> createExerciseLog(
 		@Parameter(description = "사용자 ID", required = true)
-		@RequestAttribute("userId") Long userId,
+		@RequestParam("userId") Long userId,
 
 		@Parameter(description = "운동 로그 생성 요청", required = true)
 		@Valid @RequestBody CreateExerciseLogRequest request
@@ -54,10 +55,11 @@ public class ExerciseLogController {
 	@Operation(summary = "특정 날짜 운동 로그 조회", description = "특정 날짜의 운동 로그 목록을 조회합니다.")
 	public ApiResponse<ExerciseLogListResponse> getExerciseLogs(
 		@Parameter(description = "사용자 ID", required = true)
-		@RequestAttribute("userId") Long userId,
+		@RequestParam("userId") Long userId,
 
 		@Parameter(description = "조회할 날짜 (YYYY-MM-DD)", required = true)
-		@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+		@RequestParam
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
 	) {
 		log.info("API 호출: 운동 로그 조회 - userId: {}, date: {}", userId, date);
 		ExerciseLogListResponse response = exerciseLogService.getExerciseLogsByDate(userId, date);

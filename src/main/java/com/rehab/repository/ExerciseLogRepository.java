@@ -26,7 +26,14 @@ public interface ExerciseLogRepository extends JpaRepository<ExerciseLog, Long> 
 		"ORDER BY el.loggedAt DESC")
 	List<ExerciseLog> findByUserIdAndDate(
 		@Param("userId") Long userId,
-		@Param("date") LocalDate date
+		@Param("date") LocalDateTime date
+	);
+
+	// user_id 와 logged_at 컬럼 기준으로 하루 범위 조회
+	List<ExerciseLog> findByUser_UserIdAndLoggedAtBetween(
+		Long userId,
+		LocalDateTime start,
+		LocalDateTime end
 	);
 
 	/**
