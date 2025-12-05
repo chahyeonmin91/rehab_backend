@@ -130,11 +130,12 @@ public class User extends BaseEntity {
 			.build();
 	}
 
-	public static User createKakaoUser(String providerId, String email) {
+	public static User createKakaoUser(String providerId, String email,String nickname) {
 		return User.builder()
 			.provider("kakao")
 			.providerId(providerId)
 			.email(email)
+			.username(nickname)
 			.loginType(LoginType.KAKAO)
 			.role(UserRole.USER)
 			.profileCompleted(false)

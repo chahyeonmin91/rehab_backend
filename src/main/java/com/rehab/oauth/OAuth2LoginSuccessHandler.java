@@ -29,15 +29,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 		String providerId = oAuth2User.getProviderId();
 		String email = oAuth2User.getEmail();
 		String nickname = oAuth2User.getNickname();
-		String profileImageUrl = oAuth2User.getProfileImageUrl();
-
 		// 1) 기존 회원인지 조회
 		User user = userRepository.findByProviderAndProviderId(provider, providerId)
 			.orElseGet(() -> {
 				// 신규 유저 생성
 				User newUser = User.createKakaoUser(
 					providerId,
-					email
+					email,
+					nickname
 				);
 				return userRepository.save(newUser);
 			});
