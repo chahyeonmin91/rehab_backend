@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ import java.util.List;
 @Builder
 public class ExerciseLogListResponse {
 
-	private LocalDate date;
+	private LocalDateTime date;
 	private List<ExerciseLogResponse> logs;
 }
 
