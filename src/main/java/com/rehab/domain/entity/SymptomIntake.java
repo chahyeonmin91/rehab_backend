@@ -3,6 +3,7 @@ package com.rehab.domain.entity;
 import com.rehab.domain.entity.base.BaseEntity;
 import com.rehab.domain.entity.enums.ExerciseExperience;
 import com.rehab.domain.entity.enums.PainArea;
+import com.rehab.dto.intake.IntakeDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,4 +35,12 @@ public class SymptomIntake extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	private ExerciseExperience exerciseExperience;
+
+	public void updateFromRequest(IntakeDto.IntakeRequest request) {
+		this.painArea = request.getPainArea();
+		this.painLevel = request.getPainLevel();
+		this.goal = request.getGoal();
+		this.exerciseExperience = request.getExerciseExperience();
+	}
+
 }
