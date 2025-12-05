@@ -37,9 +37,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 				// 신규 유저 생성
 				User newUser = User.createKakaoUser(
 					providerId,
-					email,
-					nickname,
-					profileImageUrl
+					email
 				);
 				return userRepository.save(newUser);
 			});

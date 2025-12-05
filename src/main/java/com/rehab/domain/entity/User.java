@@ -1,5 +1,6 @@
 package com.rehab.domain.entity;
 
+import com.rehab.domain.entity.enums.LoginType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,21 +28,24 @@ public class User extends BaseEntity {
     @Column(name = "username", unique = true)
     private String username;
 
-    @Column(name = "nickname")
-    private String nickname;
-
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+	@Column(name = "password")
+	private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")
     private Gender gender;
 
-    @Column(name = "profile_image_url")
-    private String profileImageUrl;
+	@Column(name = "age")
+	private Integer age;
+
+	@Column(name = "height")
+	private Double height;
+
+	@Column(name = "weight")
+	private Double weight;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
@@ -59,6 +63,10 @@ public class User extends BaseEntity {
     @Column(name = "fcm_token")
     private String fcmToken;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "login_type")
+	private LoginType loginType;
+
 	//소셜 로그인용 필드
 	@Column(name = "provider")
 	private String provider;  // "kakao"
@@ -66,15 +74,11 @@ public class User extends BaseEntity {
 	@Column(name = "provider_id", unique = true)
 	private String providerId;   // 카카오의 회원 고유번호
 
+	@Builder.Default
+	@Column(name = "profile_completed")
+	private Boolean profileCompleted = false;
 
 	// 연관관계
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Address> addresses = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Consent> consents = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -116,16 +120,32 @@ public class User extends BaseEntity {
     @Builder.Default
     private List<AuditLog> auditLogs = new ArrayList<>();
 
-	public static User createKakaoUser(String providerId, String email, String nickname, String profileImage) {
+	public static User createEmailUser(String email, String encodedPassword) {
+		return User.builder()
+			.email(email)
+			.password(encodedPassword)
+			.loginType(LoginType.EMAIL)
+			.role(UserRole.USER)
+			.profileCompleted(false)
+			.build();
+	}
+
+	public static User createKakaoUser(String providerId, String email) {
 		return User.builder()
 			.provider("kakao")
 			.providerId(providerId)
 			.email(email)
-			.nickname(nickname)
-			.profileImageUrl(profileImage)
+			.loginType(LoginType.KAKAO)
 			.role(UserRole.USER)
-			.currentStreak(0)
-			.maxStreak(0)
+			.profileCompleted(false)
 			.build();
+	}
+	public void updateProfile(String username, Gender gender, Integer age, Double height, Double weight) {
+		this.username = username;
+		this.gender = gender;
+		this.age = age;
+		this.height = height;
+		this.weight = weight;
+		this.profileCompleted = true;
 	}
 }
