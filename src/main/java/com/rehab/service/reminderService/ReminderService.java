@@ -13,6 +13,5 @@ public interface ReminderService {
 
 	ReminderDto.Response updateReminder(Long reminderId, ReminderDto.UpdateRequest request);
 
-	void deleteReminder(Long reminderId);
 }
 

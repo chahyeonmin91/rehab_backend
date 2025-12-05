@@ -57,10 +57,6 @@ public class ReminderServiceImpl implements ReminderService {
 		return toResponse(reminder);
 	}
 
-	@Override
-	public void deleteReminder(Long reminderId) {
-		reminderRepository.deleteById(reminderId);
-	}
 
 	private ReminderDto.Response toResponse(Reminder reminder) {
 		return ReminderDto.Response.builder()
