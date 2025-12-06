@@ -5,7 +5,7 @@ import com.rehab.apiPayload.code.status.ErrorStatus;
 import com.rehab.apiPayload.exception.handler.UserHandler;
 import com.rehab.domain.entity.SymptomIntake;
 import com.rehab.domain.entity.User;
-import com.rehab.domain.repository.SymptomIntakeRepository;
+import com.rehab.domain.repository.symptomIntake.SymptomIntakeRepository;
 import com.rehab.dto.intake.IntakeDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

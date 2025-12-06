@@ -1,7 +1,7 @@
 package com.rehab.oauth;
 
 import com.rehab.domain.entity.User;
-import com.rehab.domain.repository.UserRepository;
+import com.rehab.domain.repository.user.UserRepository;
 import com.rehab.security.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

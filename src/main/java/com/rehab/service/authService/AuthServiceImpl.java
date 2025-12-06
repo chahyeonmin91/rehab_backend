@@ -4,7 +4,7 @@ import com.rehab.apiPayload.code.status.ErrorStatus;
 import com.rehab.apiPayload.exception.handler.UserHandler;
 import com.rehab.domain.entity.User;
 import com.rehab.domain.entity.enums.LoginType;
-import com.rehab.domain.repository.UserRepository;
+import com.rehab.domain.repository.user.UserRepository;
 import com.rehab.dto.auth.AuthRequest;
 import com.rehab.dto.auth.AuthResponse;
 import com.rehab.security.jwt.JwtTokenProvider;

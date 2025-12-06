@@ -1,8 +1,8 @@
 package com.rehab.controller;
 
 import com.rehab.apiPayload.ApiResponse;
-import com.rehab.dto.response.DailySummaryResponse;
-import com.rehab.service.DailySummaryService;
+import com.rehab.dto.dailySummary.DailySummaryResponse;
+import com.rehab.service.dailySummary.DailySummaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

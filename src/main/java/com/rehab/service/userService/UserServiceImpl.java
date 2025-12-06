@@ -1,7 +1,7 @@
 package com.rehab.service.userService;
 
 import com.rehab.domain.entity.User;
-import com.rehab.domain.repository.UserRepository;
+import com.rehab.domain.repository.user.UserRepository;
 import com.rehab.dto.user.UserProfileDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -4,7 +4,7 @@ import com.rehab.apiPayload.code.status.ErrorStatus;
 import com.rehab.apiPayload.exception.handler.UserHandler;
 import com.rehab.domain.entity.Reminder;
 import com.rehab.domain.entity.User;
-import com.rehab.domain.repository.ReminderRepository;
+import com.rehab.domain.repository.remind.ReminderRepository;
 import com.rehab.dto.reminder.ReminderDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
