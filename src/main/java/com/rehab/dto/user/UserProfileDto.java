@@ -3,6 +3,8 @@ package com.rehab.dto.user;
 import com.rehab.domain.entity.enums.Gender;
 import lombok.*;
 
+import java.time.LocalDate;
+
 public class UserProfileDto {
 
 	@Getter
@@ -32,6 +34,9 @@ public class UserProfileDto {
 		private Integer age;
 		private Double height;
 		private Double weight;
+
+		private LocalDate birthDate;
+
 	}
 }
 

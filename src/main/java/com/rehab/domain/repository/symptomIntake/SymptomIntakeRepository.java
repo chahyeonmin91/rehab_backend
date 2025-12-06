@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.rehab.domain.entity.SymptomIntake;
@@ -41,4 +42,6 @@ public interface SymptomIntakeRepository extends JpaRepository<SymptomIntake, Lo
 	long countByUserId(@Param("userId") Long userId);
 
 	Optional<SymptomIntake> findByUser(User user);
+	List<SymptomIntake> findAllByUserOrderByCreatedAtDesc(User user);
+
 }

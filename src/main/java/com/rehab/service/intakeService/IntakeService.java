@@ -8,5 +8,7 @@ public interface IntakeService {
 	IntakeDto.IntakeResponse saveOrUpdateIntake(User user, IntakeDto.IntakeRequest request);
 
 	IntakeDto.IntakeResponse getMyIntake(User user);
+	IntakeDto.IntakeListResponse getMyIntakes(User user);
+
 }
 

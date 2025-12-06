@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -28,8 +31,14 @@ public class UserServiceImpl implements UserService {
 			.build();
 	}
 
+
 	@Override
 	public UserProfileDto.ProfileResponse updateMyProfile(User user, UserProfileDto.ProfileUpdateRequest request) {
+
+		if (request.getBirthDate() != null) {
+			int calculatedAge = Period.between(request.getBirthDate(), LocalDate.now()).getYears();
+			request.setAge(calculatedAge);
+		}
 
 		user.updateProfile(
 			request.getUsername(),

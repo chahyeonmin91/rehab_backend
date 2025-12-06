@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -40,6 +42,20 @@ public class IntakeServiceImpl implements IntakeService {
 
 		return toResponse(intake);
 	}
+
+	@Override
+	public IntakeDto.IntakeListResponse getMyIntakes(User user) {
+		List<SymptomIntake> list = intakeRepository.findAllByUserOrderByCreatedAtDesc(user);
+
+		List<IntakeDto.IntakeResponse> responses = list.stream()
+			.map(this::toResponse)
+			.toList();
+
+		return IntakeDto.IntakeListResponse.builder()
+			.intakes(responses)
+			.build();
+	}
+
 
 	private IntakeDto.IntakeResponse toResponse(SymptomIntake intake) {
 		return IntakeDto.IntakeResponse.builder()

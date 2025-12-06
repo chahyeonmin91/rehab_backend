@@ -5,6 +5,7 @@ import com.rehab.domain.entity.enums.PainArea;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class IntakeDto {
 
@@ -34,5 +35,15 @@ public class IntakeDto {
 		private LocalDateTime createdAt;
 		private LocalDateTime updatedAt;
 	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class IntakeListResponse {
+		private List<IntakeResponse> intakes;
+	}
+
 }
 
