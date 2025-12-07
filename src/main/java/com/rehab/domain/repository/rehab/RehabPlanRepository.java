@@ -1,12 +1,14 @@
 package com.rehab.domain.repository.rehab;
 
 import com.rehab.domain.entity.RehabPlan;
+import com.rehab.domain.entity.User;
 import com.rehab.domain.entity.enums.RehabPlanStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,4 +35,10 @@ public interface RehabPlanRepository extends JpaRepository<RehabPlan, Long> {
 	 * 사용자 ID로 플랜 존재 여부 확인
 	 */
 	boolean existsByUser_UserId(Long userId);
+
+	// 사용자의 모든 플랜 조회 (최신순)
+	List<RehabPlan> findByUserOrderByCreatedAtDesc(User user);
+
+	// 상태별 조회 (status 필드 추가 시)
+	List<RehabPlan> findByUserAndStatus(User user, String status);
 }

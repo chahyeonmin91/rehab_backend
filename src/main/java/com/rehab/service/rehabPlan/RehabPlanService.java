@@ -4,14 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rehab.apiPayload.code.status.ErrorStatus;
+import com.rehab.apiPayload.exception.GeneralException;
 import com.rehab.apiPayload.exception.RehabPlanException;
 import com.rehab.domain.entity.ExerciseLog;
 import com.rehab.domain.entity.PlanItem;
 import com.rehab.domain.entity.RehabPlan;
+import com.rehab.domain.entity.User;
 import com.rehab.domain.entity.enums.PlanPhase;
 import com.rehab.domain.entity.enums.RehabPlanStatus;
+import com.rehab.domain.repository.user.UserRepository;
 import com.rehab.dto.plan.PlanItemListResponse;
 import com.rehab.dto.plan.PlanItemResponse;
+import com.rehab.dto.plan.RehabPlanListResponse;
 import com.rehab.dto.plan.RehabPlanResponse;
 import com.rehab.domain.repository.exercise.ExerciseLogRepository;
 import com.rehab.domain.repository.plan.PlanItemRepository;
@@ -38,6 +42,7 @@ public class RehabPlanService {
 	private final RehabPlanRepository rehabPlanRepository;
 	private final PlanItemRepository planItemRepository;
 	private final ExerciseLogRepository exerciseLogRepository;
+	private final UserRepository userRepository;
 	private final ObjectMapper objectMapper;
 
 	/**
@@ -89,6 +94,44 @@ public class RehabPlanService {
 			.rehabPlanId(rehabPlanId)
 			.date(date)
 			.items(itemResponses)
+			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public RehabPlanListResponse getAllPlans(Long userId, String status) {
+		log.info("모든 플랜 조회 시작 - userId: {}, status: {}", userId, status);
+
+		// 사용자 존재 확인
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+		// 플랜 조회 (상태 필터링)
+		List<RehabPlan> plans;
+		if (status != null && !status.isEmpty()) {
+			plans = rehabPlanRepository.findByUserAndStatus(user, status);
+		} else {
+			plans = rehabPlanRepository.findByUserOrderByCreatedAtDesc(user);
+		}
+
+		// DTO 변환
+		List<RehabPlanListResponse.RehabPlanSummary> planSummaries = plans.stream()
+			.map(plan -> {
+				int totalItems = planItemRepository.countByRehabPlan(plan);
+				return RehabPlanListResponse.RehabPlanSummary.builder()
+					.rehabPlanId(plan.getRehabPlanId())
+					.userId(plan.getUser().getUserId())
+					.title(plan.getTitle())
+					.status(plan.getStatus())  // 상태 결정 로직
+					.totalItems(totalItems)
+					.createdAt(plan.getCreatedAt().toString())
+					.updatedAt(plan.getUpdatedAt().toString())
+					.build();
+			})
+			.toList();
+
+		return RehabPlanListResponse.builder()
+			.plans(planSummaries)
+			.totalCount(planSummaries.size())
 			.build();
 	}
 

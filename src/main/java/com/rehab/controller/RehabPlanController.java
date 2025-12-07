@@ -3,6 +3,7 @@ package com.rehab.controller;
 import com.rehab.apiPayload.ApiResponse;
 import com.rehab.domain.entity.enums.PlanPhase;
 import com.rehab.dto.plan.PlanItemListResponse;
+import com.rehab.dto.plan.RehabPlanListResponse;
 import com.rehab.dto.plan.RehabPlanResponse;
 import com.rehab.service.rehabPlan.RehabPlanService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +59,23 @@ public class RehabPlanController {
 	) {
 		log.info("API 호출: 플랜 항목 조회 - rehabPlanId: {}, date: {}, phase: {}", rehabPlanId, date, phase);
 		PlanItemListResponse response = rehabPlanService.getPlanItems(rehabPlanId, date, phase);
+		return ApiResponse.onSuccess(response);
+	}
+
+	/**
+	 * 3.3 사용자의 모든 재활 플랜 조회
+	 */
+	@GetMapping("/plans")
+	@Operation(summary = "사용자의 모든 재활 플랜 조회", description = "사용자의 전체 재활 플랜 목록을 조회합니다.")
+	public ApiResponse<RehabPlanListResponse> getAllPlans(
+		@Parameter(description = "사용자 ID", required = true)
+		@RequestParam("userId") Long userId,
+
+		@Parameter(description = "플랜 상태 필터 (ACTIVE, INACTIVE, COMPLETED)")
+		@RequestParam(required = false) String status
+	) {
+		log.info("API 호출: 모든 플랜 조회 - userId: {}, status: {}", userId, status);
+		RehabPlanListResponse response = rehabPlanService.getAllPlans(userId, status);
 		return ApiResponse.onSuccess(response);
 	}
 }
