@@ -6,7 +6,7 @@ import com.rehab.dto.ai.AiRecommendationRequest;
 import com.rehab.dto.ai.AiRecommendationResponse;
 import com.rehab.dto.ai.RecoveryPredictionRequest;
 import com.rehab.dto.ai.RecoveryPredictionResponse;
-import com.rehab.service.ai.AiService;
+import com.rehab.service.ai.AiServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "AI 추천", description = "AI 기반 운동 추천 및 회복 예측 API")
 public class AiController {
 
-	private final AiService aiService;
+	private final AiServiceImpl aiServiceImpl;
 
 	/**
 	 * 8.1 운동 추천 요청
@@ -44,7 +44,7 @@ public class AiController {
 		log.info("API 호출: AI 운동 추천 - userId: {}, painLevel: {}",
 			userId, request.getContext().getCurrentPainLevel());
 
-		AiRecommendationResponse response = aiService.recommendExercises(userId, request);
+		AiRecommendationResponse response = aiServiceImpl.recommendExercises(userId, request);
 		return ApiResponse.onSuccess(response);
 	}
 
@@ -64,7 +64,7 @@ public class AiController {
 		log.info("API 호출: AI 회복 예측 - userId: {}, painLevel: {}, adherence: {}",
 			userId, request.getCurrentPainLevel(), request.getRecentAdherence());
 
-		RecoveryPredictionResponse response = aiService.predictRecovery(userId, request);
+		RecoveryPredictionResponse response = aiServiceImpl.predictRecovery(userId, request);
 		return ApiResponse.onSuccess(response);
 	}
 
@@ -85,7 +85,7 @@ public class AiController {
 		log.info("API 호출: AI 추론 로그 조회 - userId: {}, modelKey: {}, limit: {}",
 			userId, modelKey, limit);
 
-		AiInferenceLogResponse response = aiService.getInferenceLogs(userId, modelKey, limit);
+		AiInferenceLogResponse response = aiServiceImpl.getInferenceLogs(userId, modelKey, limit);
 		return ApiResponse.onSuccess(response);
 	}
 
