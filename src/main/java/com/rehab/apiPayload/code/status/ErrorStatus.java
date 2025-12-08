@@ -67,6 +67,9 @@ public enum ErrorStatus implements BaseErrorCode {
 	// 일일 요약
 	DAILY_SUMMARY_NOT_FOUND(HttpStatus.NOT_FOUND, "SUMMARY_001", "일일 요약을 찾을 수 없습니다."),
 
+	AI_INFERENCE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 추론에 실패했습니다."),
+	AI_SERVER_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI_002", "AI 서버를 사용할 수 없습니다."),
+
 	;
 
 	private final HttpStatus httpStatus;
