@@ -39,9 +39,10 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		// 3) 이메일 인증 여부 체크 (추후 Redis 연동 가능)
-		if (Boolean.FALSE.equals(request.getEmailVerified())) {
-			throw new UserHandler(ErrorStatus._BAD_REQUEST); // "이메일 인증이 필요합니다."용 코드 추가해도 됨
+		if (!emailVerificationService.isVerified(request.getEmail())) {
+			throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
 		}
+
 
 		// 4) 비밀번호 암호화
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
