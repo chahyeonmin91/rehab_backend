@@ -47,6 +47,9 @@ public class User extends BaseEntity {
 	@Column(name = "weight")
 	private Double weight;
 
+	@Column(name = "birth_date")
+	private LocalDate birthDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private UserRole role;
