@@ -27,6 +27,15 @@ public class UserController {
 		return ApiResponse.onSuccess(userService.getMyProfile(user));
 	}
 
+	@PostMapping("/me")
+	@Operation(summary = "프로필 최초 생성", description = "회원가입 직후 프로필 최초 생성용 API")
+	public ApiResponse<UserProfileDto.ProfileResponse> createMyProfile(
+		@AuthenticationPrincipal User user,
+		@RequestBody UserProfileDto.ProfileUpdateRequest request
+	) {
+		return ApiResponse.onSuccess(userService.updateMyProfile(user, request));
+	}
+
 	@PatchMapping("/me")
 	@Operation(summary = "내 프로필 수정", description = "이름/성별/나이/키/몸무게 수정")
 	public ApiResponse<UserProfileDto.ProfileResponse> updateMyProfile(

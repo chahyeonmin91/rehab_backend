@@ -29,9 +29,9 @@ public class IntakeController {
 
 	@GetMapping
 	@Operation(summary = "문진 정보 조회", description = "내 문진 정보 조회")
-	public ApiResponse<IntakeDto.IntakeResponse> getMyIntake(
+	public ApiResponse<IntakeDto.IntakeListResponse> getMyIntake(
 		@AuthenticationPrincipal User user
 	) {
-		return ApiResponse.onSuccess(intakeService.getMyIntake(user));
+		return ApiResponse.onSuccess(intakeService.getMyIntakes(user));
 	}
 }
