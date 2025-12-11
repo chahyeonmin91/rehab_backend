@@ -33,4 +33,6 @@ public interface MedicationPlanItemRepository extends JpaRepository<MedicationPl
 	 * 재활 플랜의 복약 항목 개수
 	 */
 	int countByRehabPlan(RehabPlan rehabPlan);
+
+	long countByRehabPlan_RehabPlanId(Long rehabPlanId);
 }
