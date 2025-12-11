@@ -12,12 +12,12 @@ public class ReminderDto {
 	public static class CreateRequest {
 		private ReminderType type;
 		private ReminderChannel channel;
-		private String rule; // JSON (RRULE)
+		private String rule;   // JSON
+		private Boolean enabled;
 	}
 
 	@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 	public static class UpdateRequest {
-		private ReminderChannel channel;
 		private String rule;
 		private Boolean enabled;
 	}
@@ -30,5 +30,7 @@ public class ReminderDto {
 		private String rule;
 		private Boolean enabled;
 		private LocalDateTime nextFireAt;
+		private LocalDateTime createdAt;
+		private LocalDateTime updatedAt;
 	}
 }

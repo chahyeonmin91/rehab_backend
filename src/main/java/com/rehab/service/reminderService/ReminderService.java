@@ -9,9 +9,8 @@ public interface ReminderService {
 
 	ReminderDto.Response createReminder(User user, ReminderDto.CreateRequest request);
 
+	ReminderDto.Response updateReminder(User user, Long id, ReminderDto.UpdateRequest request);
+
 	List<ReminderDto.Response> getMyReminders(User user);
-
-	ReminderDto.Response updateReminder(Long reminderId, ReminderDto.UpdateRequest request);
-
 }
 
