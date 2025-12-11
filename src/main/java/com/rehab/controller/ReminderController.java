@@ -20,25 +20,32 @@ public class ReminderController {
 	private final ReminderService reminderService;
 
 	@PostMapping
-	public ApiResponse<ReminderDto.Response> create(
+	public ApiResponse<ReminderDto.Response> createReminder(
 		@AuthenticationPrincipal User user,
 		@RequestBody ReminderDto.CreateRequest request
 	) {
-		return ApiResponse.onSuccess(reminderService.createReminder(user, request));
+		return ApiResponse.onSuccess(
+			reminderService.createReminder(user, request)
+		);
+	}
+
+	@PatchMapping("/{id}")
+	public ApiResponse<ReminderDto.Response> updateReminder(
+		@AuthenticationPrincipal User user,
+		@PathVariable Long id,
+		@RequestBody ReminderDto.UpdateRequest request
+	) {
+		return ApiResponse.onSuccess(
+			reminderService.updateReminder(user, id, request)
+		);
 	}
 
 	@GetMapping
 	public ApiResponse<List<ReminderDto.Response>> getMyReminders(
 		@AuthenticationPrincipal User user
 	) {
-		return ApiResponse.onSuccess(reminderService.getMyReminders(user));
-	}
-
-	@PatchMapping("/{id}")
-	public ApiResponse<ReminderDto.Response> update(
-		@PathVariable Long id,
-		@RequestBody ReminderDto.UpdateRequest request
-	) {
-		return ApiResponse.onSuccess(reminderService.updateReminder(id, request));
+		return ApiResponse.onSuccess(
+			reminderService.getMyReminders(user)
+		);
 	}
 }

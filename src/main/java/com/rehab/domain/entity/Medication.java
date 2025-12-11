@@ -70,7 +70,30 @@ public class Medication extends BaseEntity {
     @Builder.Default
     private List<MedicationLog> medicationLogs = new ArrayList<>();
 
-	@OneToMany(mappedBy = "medication", cascade = CascadeType.ALL, orphanRemoval = true)
-	@Builder.Default
-	private List<MedicationPlanItem> medicationPlanItems = new ArrayList<>();
+
+	public void update(String name,
+					   String dose,
+					   String route,
+					   String instructions,
+					   String description,
+					   MedicationStatus status) {
+		if (name != null) {
+			this.name = name;
+		}
+		if (dose != null) {
+			this.dose = dose;
+		}
+		if (route != null) {
+			this.route = route;
+		}
+		if (instructions != null) {
+			this.instructions = instructions;
+		}
+		if (description != null) {
+			this.description = description;
+		}
+		if (status != null) {
+			this.status = status;
+		}
+	}
 }

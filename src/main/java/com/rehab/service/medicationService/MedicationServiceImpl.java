@@ -14,9 +14,11 @@ import com.rehab.dto.medication.MedicationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +46,31 @@ public class MedicationServiceImpl implements MedicationService {
 
 		return toResponse(medication);
 	}
+	@Override
+	public MedicationDto.Response updateMedication(User user, Long medicationId, MedicationDto.UpdateRequest request) {
+
+		Medication medication = medicationRepository.findById(medicationId)
+			.orElseThrow(() -> new UserHandler(ErrorStatus._BAD_REQUEST));
+
+		// 본인 약인지 체크 (아닌데 수정하려 하면 에러)
+		if (!medication.getUser().getUserId().equals(user.getUserId())) {
+			throw new UserHandler(ErrorStatus._UNAUTHORIZED);
+		}
+
+		medication.update(
+			request.getName(),
+			request.getDose(),
+			request.getRoute(),
+			request.getInstructions(),
+			request.getDescription(),
+			request.getStatus()
+		);
+
+		medicationRepository.save(medication);
+
+		return toResponse(medication);
+	}
+
 
 	@Override
 	public List<MedicationDto.Response> getMyMedications(User user) {
@@ -75,6 +102,49 @@ public class MedicationServiceImpl implements MedicationService {
 			.rrule(schedule.getRrule())
 			.build();
 	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public MedicationDto.DailyScheduleResponse getSchedulesForDate(User user, LocalDate date) {
+
+		List<Medication> medications = medicationRepository.findByUser(user);
+
+		List<MedicationDto.ScheduleWithStatus> schedules = new ArrayList<>();
+
+		for (Medication med : medications) {
+			for (MediSchedule schedule : med.getMediSchedules()) {
+
+				// 해당 날짜 + timeOfDay 기준으로 log 하나 찾기
+				MedicationLog matchedLog = med.getMedicationLogs().stream()
+					.filter(log -> log.getTimeOfDay() == schedule.getTimeOfDay()
+						&& log.getTakenAt() != null
+						&& log.getTakenAt().toLocalDate().equals(date))
+					.findFirst()
+					.orElse(null);
+
+				schedules.add(
+					MedicationDto.ScheduleWithStatus.builder()
+						.scheduleId(schedule.getMediScheduleId())
+						.medicationId(med.getMedicationId())
+						.medicationName(med.getName())
+						.dose(med.getDose())
+						.timeOfDay(schedule.getTimeOfDay())
+						.notify(schedule.getNotify())
+						.rrule(schedule.getRrule())
+						.taken(matchedLog != null && Boolean.TRUE.equals(matchedLog.getTaken()))
+						.takenAt(matchedLog != null ? matchedLog.getTakenAt() : null)
+						.build()
+				);
+			}
+		}
+
+		return MedicationDto.DailyScheduleResponse.builder()
+			.date(date)
+			.schedules(schedules)
+			.build();
+	}
+
+
 
 	@Override
 	public MedicationDto.MedicationLogResponse recordLog(Long medicationId, MedicationDto.LogRequest request) {

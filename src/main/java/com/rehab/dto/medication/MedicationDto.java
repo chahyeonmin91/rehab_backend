@@ -4,6 +4,7 @@ import com.rehab.domain.entity.enums.MedicationStatus;
 import com.rehab.domain.entity.enums.TimeOfDay;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -64,6 +65,35 @@ public class MedicationDto {
 		private TimeOfDay timeOfDay;
 		private Boolean taken;
 		private String notes;
+		private LocalDateTime takenAt;
+	}
+
+	@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+	public static class UpdateRequest {
+		private String name;
+		private String dose;
+		private String route;
+		private String instructions;
+		private String description;
+		private MedicationStatus status;
+	}
+
+	@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+	public static class DailyScheduleResponse {
+		private LocalDate date;
+		private List<ScheduleWithStatus> schedules;
+	}
+
+	@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+	public static class ScheduleWithStatus {
+		private Long scheduleId;
+		private Long medicationId;
+		private String medicationName;
+		private String dose;
+		private TimeOfDay timeOfDay;
+		private Boolean notify;
+		private String rrule;
+		private Boolean taken;
 		private LocalDateTime takenAt;
 	}
 }
