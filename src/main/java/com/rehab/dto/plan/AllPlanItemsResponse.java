@@ -6,31 +6,33 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 플랜 항목 목록 조회 응답 DTO (운동 + 복약 + 식단 통합)
+ * 플랜의 모든 항목 통합 조회 응답 DTO
  */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "플랜 항목 목록 조회 응답")
-public class PlanItemListResponse {
+@Schema(description = "플랜의 모든 항목 통합 조회 응답")
+public class AllPlanItemsResponse {
 
 	@Schema(description = "재활 플랜 ID", example = "789")
 	private Long rehabPlanId;
 
-	@Schema(description = "조회 날짜", example = "2025-12-01")
-	private LocalDate date;
+	@Schema(description = "플랜 제목", example = "허리 통증 4주 종합 재활 플랜")
+	private String title;
 
 	@Schema(description = "운동 항목 목록")
-	private List<PlanItemResponse> exerciseItems;
+	private List<PlanItemResponse> exercises;
 
 	@Schema(description = "복약 항목 목록")
-	private List<MedicationPlanItemResponse> medicationItems;
+	private List<MedicationPlanItemResponse> medications;
 
 	@Schema(description = "식단 항목 목록")
-	private List<DietPlanItemResponse> dietItems;
+	private List<DietPlanItemResponse> diets;
+
+	@Schema(description = "총 항목 수")
+	private Integer totalCount;
 }
