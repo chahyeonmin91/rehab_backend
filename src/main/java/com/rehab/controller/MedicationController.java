@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -46,6 +47,19 @@ public class MedicationController {
 		return ApiResponse.onSuccess(medicationService.addSchedule(medicationId, request));
 	}
 
+	@PatchMapping("/{medicationId}")
+	@Operation(summary = "복약 정보 수정")
+	public ApiResponse<MedicationDto.Response> updateMedication(
+		@AuthenticationPrincipal User user,
+		@PathVariable Long medicationId,
+		@RequestBody MedicationDto.UpdateRequest request
+	) {
+		return ApiResponse.onSuccess(
+			medicationService.updateMedication(user, medicationId, request)
+		);
+	}
+
+
 	@PostMapping("/{medicationId}/log")
 	@Operation(summary = "복약 기록 추가")
 	public ApiResponse<MedicationDto.MedicationLogResponse> recordLog(
@@ -54,4 +68,17 @@ public class MedicationController {
 	) {
 		return ApiResponse.onSuccess(medicationService.recordLog(medicationId, request));
 	}
+
+	@GetMapping("/schedules")
+	@Operation(summary = "특정 날짜 복약 스케줄 조회")
+	public ApiResponse<MedicationDto.DailyScheduleResponse> getSchedulesForDate(
+		@AuthenticationPrincipal User user,
+		@RequestParam("date") String date
+	) {
+		LocalDate localDate = LocalDate.parse(date);
+		return ApiResponse.onSuccess(
+			medicationService.getSchedulesForDate(user, localDate)
+		);
+	}
+
 }
