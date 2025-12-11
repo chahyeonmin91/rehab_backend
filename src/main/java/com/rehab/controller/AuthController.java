@@ -2,19 +2,30 @@ package com.rehab.controller;
 
 
 import com.rehab.apiPayload.ApiResponse;
+import com.rehab.common.util.CodeGenerator;
 import com.rehab.dto.auth.AuthRequest;
 import com.rehab.dto.auth.AuthResponse;
+import com.rehab.dto.email.EmailRequest;
 import com.rehab.service.authService.AuthService;
+import com.rehab.service.emailService.EmailService;
+import com.rehab.service.emailService.EmailVerificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name = "Auth", description = "회원가입 / 로그인 API")
 public class AuthController {
+
+	private final CodeGenerator codeGenerator;
+	private final EmailVerificationService emailVerificationService;
+	private final EmailService emailService;
+
 
 	private final AuthService authService;
 
@@ -33,15 +44,31 @@ public class AuthController {
 	) {
 		return ApiResponse.onSuccess(authService.login(request));
 	}
+	@PostMapping("/auth/email/send")
+	public ApiResponse<?> sendEmailCode(@RequestBody EmailRequest.Send request) {
 
-//	@PostMapping("/auth/email/send")
-//	public ApiResponse<?> sendEmail(@RequestBody EmailRequest.Send request) {
-//		return ApiResponse.onSuccess("이메일 인증코드 발송 예정 기능");
-//	}
-//
-//	@PostMapping("/auth/email/verify")
-//	public ApiResponse<?> verifyEmail(@RequestBody EmailRequest.Verify request) {
-//		return ApiResponse.onSuccess("인증코드 검증 예정 기능");
-//	}
+		String code = codeGenerator.generate6DigitCode();
+		emailVerificationService.saveVerificationCode(request.getEmail(), code);
 
+		emailService.sendVerificationCode(request.getEmail(), code);
+
+		return ApiResponse.onSuccess(null);
+	}
+
+
+	@PostMapping("/auth/email/verify")
+	public ApiResponse<?> verifyEmailCode(@RequestBody EmailRequest.Verify request) {
+
+		String saved = emailVerificationService.getVerificationCode(request.getEmail());
+
+		if (saved == null || !saved.equals(request.getAuthCode())) {
+			return ApiResponse.onFailure("400", "인증코드가 일치하지 않습니다.", null);
+		}
+
+		emailVerificationService.markVerified(request.getEmail());
+
+		return ApiResponse.onSuccess(
+			Map.of("verified", true)
+		);
+	}
 }

@@ -28,6 +28,7 @@ public class IntakeDto {
 	@Builder
 	public static class IntakeResponse {
 		private Long intakeId;
+		private Long userId;
 		private PainArea painArea;
 		private Integer painLevel;
 		private String goal;

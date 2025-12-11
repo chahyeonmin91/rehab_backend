@@ -47,6 +47,9 @@ public class User extends BaseEntity {
 	@Column(name = "weight")
 	private Double weight;
 
+	@Column(name = "birth_date")
+	private LocalDate birthDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private UserRole role;
@@ -149,12 +152,13 @@ public class User extends BaseEntity {
 			.profileCompleted(false)
 			.build();
 	}
-	public void updateProfile(String username, Gender gender, Integer age, Double height, Double weight) {
+	public void updateProfile(String username, Gender gender, Integer age, Double height, Double weight, LocalDate birthDate) {
 		this.username = username;
 		this.gender = gender;
 		this.age = age;
 		this.height = height;
 		this.weight = weight;
+		this.birthDate = birthDate;
 		this.profileCompleted = true;
 	}
 
@@ -163,8 +167,7 @@ public class User extends BaseEntity {
 	 */
 	public void addSymptomIntake(SymptomIntake symptomIntake) {
 		this.symptomIntakes.add(symptomIntake);
-		// SymptomIntake 엔티티에 setUser 메서드가 있다면 설정
-		// symptomIntake.setUser(this);
+		// symptomIntake.setUser(this); //필요하면 양방향 세팅
 	}
 
 	/**

@@ -31,26 +31,31 @@ public class UserServiceImpl implements UserService {
 			.build();
 	}
 
-
 	@Override
 	public UserProfileDto.ProfileResponse updateMyProfile(User user, UserProfileDto.ProfileUpdateRequest request) {
 
-		if (request.getBirthDate() != null) {
-			int calculatedAge = Period.between(request.getBirthDate(), LocalDate.now()).getYears();
-			request.setAge(calculatedAge);
-		}
+		LocalDate birthDate = request.getBirthDate() != null
+			? request.getBirthDate()
+			: user.getBirthDate();
 
+		Integer age = null;
+		if (birthDate != null) {
+			age = Period.between(birthDate, LocalDate.now()).getYears();
+		} else {
+			age = request.getAge();
+		}
 		user.updateProfile(
 			request.getUsername(),
 			request.getGender(),
-			request.getAge(),
+			age,
 			request.getHeight(),
-			request.getWeight()
+			request.getWeight(),
+			birthDate
 		);
 
-		// JPA dirty checking 으로 자동 반영, 그래도 명시적으로 save 호출해도 OK
 		userRepository.save(user);
 
 		return getMyProfile(user);
 	}
+
 }
