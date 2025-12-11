@@ -69,4 +69,8 @@ public class Medication extends BaseEntity {
     @OneToMany(mappedBy = "medication", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MedicationLog> medicationLogs = new ArrayList<>();
+
+	@OneToMany(mappedBy = "medication", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
+	private List<MedicationPlanItem> medicationPlanItems = new ArrayList<>();
 }

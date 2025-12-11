@@ -6,9 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rehab.apiPayload.code.status.ErrorStatus;
 import com.rehab.apiPayload.exception.RehabPlanException;
 import com.rehab.domain.entity.DailySummary;
+import com.rehab.domain.entity.DietLog;
 import com.rehab.domain.entity.ExerciseLog;
+import com.rehab.domain.entity.MedicationLog;
 import com.rehab.domain.entity.PlanItem;
+import com.rehab.domain.entity.RehabPlan;
 import com.rehab.domain.entity.User;
+import com.rehab.domain.repository.diet.DietLogRepository;
+import com.rehab.domain.repository.diet.DietPlanItemRepository;
+import com.rehab.domain.repository.medication.MedicationLogRepository;
+import com.rehab.domain.repository.medication.MedicationPlanItemRepository;
+import com.rehab.domain.repository.rehab.RehabPlanRepository;
 import com.rehab.domain.repository.user.UserRepository;
 import com.rehab.dto.dailySummary.DailySummaryResponse;
 import com.rehab.domain.repository.dailySummary.DailySummaryRepository;
@@ -39,23 +47,24 @@ public class DailySummaryService {
 
 	private final DailySummaryRepository dailySummaryRepository;
 	private final ExerciseLogRepository exerciseLogRepository;
+	private final MedicationLogRepository medicationLogRepository;
+	private final DietLogRepository dietLogRepository;
 	private final PlanItemRepository planItemRepository;
+	private final MedicationPlanItemRepository medicationPlanItemRepository;
+	private final DietPlanItemRepository dietPlanItemRepository;
+	private final RehabPlanRepository rehabPlanRepository;
 	private final UserRepository userRepository;
 	private final StreakService streakService;
 	private final ObjectMapper objectMapper;
 
 	/**
 	 * 일일 요약 조회
-	 *
-	 * - 컨트롤러에서는 LocalDate(YYYY-MM-DD)로 받고
-	 * - 여기서는 해당 날짜의 0시(LocalDateTime)로 변환해서 조회
 	 */
 	public DailySummaryResponse getDailySummary(Long userId, LocalDate date) {
 		log.info("일일 요약 조회 - userId: {}, date: {}", userId, date);
 
 		LocalDateTime startOfDay = date.atStartOfDay();
 
-		// DailySummary.date 는 LocalDateTime(하루의 시작 시각)이라고 가정
 		DailySummary summary = dailySummaryRepository
 			.findByUser_UserIdAndDate(userId, startOfDay)
 			.orElseThrow(() -> new RehabPlanException(ErrorStatus.DAILY_SUMMARY_NOT_FOUND));
@@ -64,9 +73,7 @@ public class DailySummaryService {
 	}
 
 	/**
-	 * 일일 요약 업데이트 (운동 로그 생성 시 호출)
-	 *
-	 * - loggedAt(LocalDateTime)을 기준으로 해당 "하루" 범위를 계산해서 로그 집계
+	 * 일일 요약 업데이트 (운동/복약/식단 로그 생성 시 호출)
 	 */
 	@Transactional
 	public void updateDailySummary(Long userId, LocalDateTime dateTime) {
@@ -75,72 +82,47 @@ public class DailySummaryService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new RehabPlanException(ErrorStatus.USER_NOT_FOUND));
 
-		// 기준 날짜 (연속성/스트릭은 날짜 단위)
+		// 기준 날짜
 		LocalDate targetDate = dateTime.toLocalDate();
 		LocalDateTime startOfDay = targetDate.atStartOfDay();
 		LocalDateTime endOfDay = targetDate.atTime(LocalTime.MAX);
 
-		// 해당 날짜 범위의 운동 로그 조회
-		// 👉 ExerciseLogRepository 에 아래 메서드가 있어야 함:
-		// List<ExerciseLog> findByUser_UserIdAndLoggedAtBetween(Long userId, LocalDateTime start, LocalDateTime end);
-		List<ExerciseLog> logs = exerciseLogRepository
-			.findByUser_UserIdAndLoggedAtBetween(userId, startOfDay, endOfDay);
+		// 현재 활성 플랜 조회
+		RehabPlan activePlan = rehabPlanRepository
+			.findFirstByUser_UserIdAndStatusOrderByCreatedAtDesc(userId,
+				com.rehab.domain.entity.enums.RehabPlanStatus.ACTIVE)
+			.orElse(null);
 
-		if (logs.isEmpty()) {
-			log.warn("운동 로그가 없어 일일 요약을 업데이트하지 않습니다. userId: {}, date: {}", userId, targetDate);
+		if (activePlan == null) {
+			log.warn("활성 플랜이 없어 일일 요약을 업데이트하지 않습니다. userId: {}, date: {}", userId, targetDate);
 			return;
 		}
 
-		// 운동 완료율 계산
-		long totalExercises = logs.stream()
-			.map(ExerciseLog::getPlanItem)
-			.map(PlanItem::getRehabPlan)
-			.findFirst()
-			.map(plan -> planItemRepository.countByRehabPlan_RehabPlanId(plan.getRehabPlanId()))
-			.orElse(0L);
+		// 1. 운동 완료율 계산
+		ExerciseCompletionResult exerciseResult = calculateExerciseCompletion(
+			userId, activePlan.getRehabPlanId(), startOfDay, endOfDay);
 
-		long completedExercises = logs.stream()
-			.filter(log -> log.getCompletionRate() != null && log.getCompletionRate() >= 80)
-			.count();
+		// 2. 복약 완료율 계산
+		MedicationCompletionResult medicationResult = calculateMedicationCompletion(
+			userId, activePlan.getRehabPlanId(), startOfDay, endOfDay);
 
-		int exerciseCompletionRate = totalExercises > 0
-			? (int) ((completedExercises * 100) / totalExercises)
-			: 0;
-		boolean allExercisesCompleted = completedExercises == totalExercises && totalExercises > 0;
-
-		// 평균 통증 점수 계산
-		double avgPainScore = logs.stream()
-			.filter(log -> log.getPainAfter() != null)
-			.mapToInt(ExerciseLog::getPainAfter)
-			.average()
-			.orElse(0.0);
-
-		// 총 운동 시간 계산
-		int totalDurationSec = logs.stream()
-			.filter(log -> log.getDurationSec() != null)
-			.mapToInt(ExerciseLog::getDurationSec)
-			.sum();
-
-		// 평균 RPE 계산
-		double avgRpe = logs.stream()
-			.filter(log -> log.getRpe() != null)
-			.mapToInt(ExerciseLog::getRpe)
-			.average()
-			.orElse(0.0);
+		// 3. 식단 완료율 계산
+		DietCompletionResult dietResult = calculateDietCompletion(
+			userId, activePlan.getRehabPlanId(), startOfDay, endOfDay);
 
 		// dailyMetrics 구성
 		Map<String, Object> dailyMetrics = new HashMap<>();
-		dailyMetrics.put("totalExercises", totalExercises);
-		dailyMetrics.put("completedExercises", completedExercises);
-		dailyMetrics.put("avgRpe", Math.round(avgRpe * 10) / 10.0);
+		dailyMetrics.put("totalExercises", exerciseResult.totalCount);
+		dailyMetrics.put("completedExercises", exerciseResult.completedCount);
+		dailyMetrics.put("avgRpe", exerciseResult.avgRpe);
+		dailyMetrics.put("totalMedications", medicationResult.totalCount);
+		dailyMetrics.put("takenMedications", medicationResult.completedCount);
+		dailyMetrics.put("totalDiets", dietResult.totalCount);
+		dailyMetrics.put("completedDiets", dietResult.completedCount);
 
 		String dailyMetricsJson = convertToJson(dailyMetrics);
 
-		// 복약 완료율 (현재는 0, 추후 구현)
-		int medicationCompletionRate = 0;
-
 		// 일일 요약 조회 또는 생성
-		// DailySummary.date = 해당 날짜의 00:00:00(LocalDateTime)
 		DailySummary summary = dailySummaryRepository
 			.findByUser_UserIdAndDate(userId, startOfDay)
 			.orElseGet(() -> DailySummary.builder()
@@ -149,37 +131,159 @@ public class DailySummaryService {
 				.build()
 			);
 
-		// 업데이트 (새로운 객체 생성, 기존 summaryId 유지)
+		// 업데이트
 		DailySummary updatedSummary = DailySummary.builder()
 			.summaryId(summary.getSummaryId())
 			.user(user)
 			.date(startOfDay)
-			.allExercisesCompleted(allExercisesCompleted)
-			.exerciseCompletionRate(exerciseCompletionRate)
-			.allMedicationsTaken(false) // 복약 정보는 추후 구현
-			.medicationCompletionRate(medicationCompletionRate)
-			.avgPainScore((int) Math.round(avgPainScore))
-			.totalDurationSec(totalDurationSec)
+			// 운동
+			.allExercisesCompleted(exerciseResult.allCompleted)
+			.exerciseCompletionRate(exerciseResult.completionRate)
+			// 복약
+			.allMedicationsTaken(medicationResult.allCompleted)
+			.medicationCompletionRate(medicationResult.completionRate)
+			// 식단
+			.allDietCompleted(dietResult.allCompleted)
+			.dietCompletionRate(dietResult.completionRate)
+			// 기타
+			.avgPainScore(exerciseResult.avgPainScore)
+			.totalDurationSec(exerciseResult.totalDurationSec)
 			.dailyMetrics(dailyMetricsJson)
 			.build();
 
 		dailySummaryRepository.save(updatedSummary);
 
-		log.info("일일 요약 업데이트 완료 - summaryId: {}", updatedSummary.getSummaryId());
+		log.info("일일 요약 업데이트 완료 - summaryId: {}, 운동: {}%, 복약: {}%, 식단: {}%",
+			updatedSummary.getSummaryId(),
+			exerciseResult.completionRate,
+			medicationResult.completionRate,
+			dietResult.completionRate);
 
-		// Streak 업데이트 (날짜 단위로 처리)
+		// Streak 업데이트
 		try {
 			streakService.updateStreakFromDailySummary(
 				userId,
 				targetDate,
-				exerciseCompletionRate,
-				medicationCompletionRate
+				exerciseResult.completionRate,
+				medicationResult.completionRate
 			);
 			log.info("Streak 업데이트 완료 - userId: {}, date: {}", userId, targetDate);
 		} catch (Exception e) {
-			// Streak 업데이트 실패해도 일일 요약은 저장
 			log.error("Streak 업데이트 실패 - userId: {}, date: {}", userId, targetDate, e);
 		}
+	}
+
+	/**
+	 * 운동 완료율 계산
+	 */
+	private ExerciseCompletionResult calculateExerciseCompletion(
+		Long userId, Long rehabPlanId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
+
+		// 해당 플랜의 총 운동 항목 수
+		long totalExercises = planItemRepository.countByRehabPlan_RehabPlanId(rehabPlanId);
+
+		// 해당 날짜의 운동 로그
+		List<ExerciseLog> logs = exerciseLogRepository
+			.findByUser_UserIdAndLoggedAtBetween(userId, startOfDay, endOfDay);
+
+		if (totalExercises == 0) {
+			return new ExerciseCompletionResult(0, 0, 0, true, 0, 0, 0.0);
+		}
+
+		// 완료된 운동 (완료율 80% 이상)
+		long completedExercises = logs.stream()
+			.filter(log -> log.getCompletionRate() != null && log.getCompletionRate() >= 80)
+			.count();
+
+		int completionRate = (int) ((completedExercises * 100) / totalExercises);
+		boolean allCompleted = completedExercises >= totalExercises;
+
+		// 평균 통증 점수
+		int avgPainScore = (int) Math.round(logs.stream()
+			.filter(log -> log.getPainAfter() != null)
+			.mapToInt(ExerciseLog::getPainAfter)
+			.average()
+			.orElse(0.0));
+
+		// 총 운동 시간
+		int totalDurationSec = logs.stream()
+			.filter(log -> log.getDurationSec() != null)
+			.mapToInt(ExerciseLog::getDurationSec)
+			.sum();
+
+		// 평균 RPE
+		double avgRpe = Math.round(logs.stream()
+			.filter(log -> log.getRpe() != null)
+			.mapToInt(ExerciseLog::getRpe)
+			.average()
+			.orElse(0.0) * 10) / 10.0;
+
+		return new ExerciseCompletionResult(
+			totalExercises, completedExercises, completionRate, allCompleted,
+			avgPainScore, totalDurationSec, avgRpe);
+	}
+
+	/**
+	 * 복약 완료율 계산
+	 */
+	private MedicationCompletionResult calculateMedicationCompletion(
+		Long userId, Long rehabPlanId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
+
+		// 해당 플랜의 총 복약 항목 수
+		long totalMedications = medicationPlanItemRepository.countByRehabPlan_RehabPlanId(rehabPlanId);
+
+		if (totalMedications == 0) {
+			return new MedicationCompletionResult(0, 0, 0, true);
+		}
+
+		// 해당 날짜의 복약 로그
+		List<MedicationLog> logs = medicationLogRepository
+			.findByUser_UserIdAndTakenAtBetween(userId, startOfDay, endOfDay);
+
+		// 복용 완료된 복약 (taken = true)
+		long takenMedications = logs.stream()
+			.filter(MedicationLog::getTaken)
+			.count();
+
+		int completionRate = (int) ((takenMedications * 100) / totalMedications);
+		boolean allCompleted = takenMedications >= totalMedications;
+
+		return new MedicationCompletionResult(
+			totalMedications, takenMedications, completionRate, allCompleted);
+	}
+
+	/**
+	 * 식단 완료율 계산
+	 */
+	private DietCompletionResult calculateDietCompletion(
+		Long userId, Long rehabPlanId, LocalDateTime startOfDay, LocalDateTime endOfDay) {
+
+		// 해당 플랜의 총 식단 항목 수
+		long totalDiets = dietPlanItemRepository.countByRehabPlan_RehabPlanId(rehabPlanId);
+
+		if (totalDiets == 0) {
+			return new DietCompletionResult(0, 0, 0, true);
+		}
+
+		// 해당 날짜의 식단 로그
+		List<DietLog> logs = dietLogRepository
+			.findByUser_UserIdAndLoggedAtBetween(userId, startOfDay, endOfDay);
+
+		// 완료된 식단 (completed = true 또는 portionConsumed >= 80)
+		long completedDiets = logs.stream()
+			.filter(log -> {
+				if (log.getCompleted() != null && log.getCompleted()) {
+					return true;
+				}
+				return log.getPortionConsumed() != null && log.getPortionConsumed() >= 80;
+			})
+			.count();
+
+		int completionRate = (int) ((completedDiets * 100) / totalDiets);
+		boolean allCompleted = completedDiets >= totalDiets;
+
+		return new DietCompletionResult(
+			totalDiets, completedDiets, completionRate, allCompleted);
 	}
 
 	/**
@@ -189,15 +293,16 @@ public class DailySummaryService {
 		return DailySummaryResponse.builder()
 			.summaryId(summary.getSummaryId())
 			.userId(summary.getUser().getUserId())
-			// DailySummary.date 가 LocalDateTime 이라면 toLocalDate()로 변환
 			.date(summary.getDate().toLocalDate())
 			.allExercisesCompleted(summary.getAllExercisesCompleted())
 			.exerciseCompletionRate(summary.getExerciseCompletionRate())
 			.allMedicationsTaken(summary.getAllMedicationsTaken())
 			.medicationCompletionRate(summary.getMedicationCompletionRate())
+			.allDietCompleted(summary.getAllDietCompleted())
+			.dietCompletionRate(summary.getDietCompletionRate())
 			.avgPainScore(summary.getAvgPainScore())
 			.totalDurationSec(summary.getTotalDurationSec())
-			.dailyMetrics(parseJson(summary.getDailyMetrics().toString()))
+			.dailyMetrics(parseJson(summary.getDailyMetrics()))
 			.createdAt(summary.getCreatedAt())
 			.updatedAt(summary.getUpdatedAt())
 			.build();
@@ -227,6 +332,59 @@ public class DailySummaryService {
 		} catch (JsonProcessingException e) {
 			log.error("JSON 변환 실패: {}", map, e);
 			return "{}";
+		}
+	}
+
+	// ===== 내부 클래스 (결과 객체) =====
+
+	private static class ExerciseCompletionResult {
+		long totalCount;
+		long completedCount;
+		int completionRate;
+		boolean allCompleted;
+		int avgPainScore;
+		int totalDurationSec;
+		double avgRpe;
+
+		ExerciseCompletionResult(long totalCount, long completedCount, int completionRate,
+			boolean allCompleted, int avgPainScore, int totalDurationSec, double avgRpe) {
+			this.totalCount = totalCount;
+			this.completedCount = completedCount;
+			this.completionRate = completionRate;
+			this.allCompleted = allCompleted;
+			this.avgPainScore = avgPainScore;
+			this.totalDurationSec = totalDurationSec;
+			this.avgRpe = avgRpe;
+		}
+	}
+
+	private static class MedicationCompletionResult {
+		long totalCount;
+		long completedCount;
+		int completionRate;
+		boolean allCompleted;
+
+		MedicationCompletionResult(long totalCount, long completedCount,
+			int completionRate, boolean allCompleted) {
+			this.totalCount = totalCount;
+			this.completedCount = completedCount;
+			this.completionRate = completionRate;
+			this.allCompleted = allCompleted;
+		}
+	}
+
+	private static class DietCompletionResult {
+		long totalCount;
+		long completedCount;
+		int completionRate;
+		boolean allCompleted;
+
+		DietCompletionResult(long totalCount, long completedCount,
+			int completionRate, boolean allCompleted) {
+			this.totalCount = totalCount;
+			this.completedCount = completedCount;
+			this.completionRate = completionRate;
+			this.allCompleted = allCompleted;
 		}
 	}
 }

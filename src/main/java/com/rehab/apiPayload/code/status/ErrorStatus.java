@@ -70,6 +70,12 @@ public enum ErrorStatus implements BaseErrorCode {
 	AI_INFERENCE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 추론에 실패했습니다."),
 	AI_SERVER_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI_002", "AI 서버를 사용할 수 없습니다."),
 
+	INVALID_STATUS(HttpStatus.BAD_REQUEST, "PLAN4001", "유효하지 않은 상태 값입니다."),
+	MEDICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "MEDICATION404", "복약 정보를 찾을 수 없습니다."),
+	DIET_NOT_FOUND(HttpStatus.NOT_FOUND, "DIET404", "식단 정보를 찾을 수 없습니다."),
+	DIET_PLAN_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "DIET_PLAN_ITEM404", "식단 플랜 항목을 찾을 수 없습니다."),
+
+
 	;
 
 	private final HttpStatus httpStatus;

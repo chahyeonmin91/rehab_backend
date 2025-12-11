@@ -77,6 +77,12 @@ public class DailySummary extends BaseEntity {
 	@Column(name = "daily_metrics", columnDefinition = "json")
 	private String  dailyMetrics;
 
+	@Column(name = "all_diet_completed")
+	private Boolean allDietCompleted;
+
+	@Column(name = "diet_completion_rate")
+	private Integer dietCompletionRate;
+
 	// === 비즈니스 메서드 ===
 
 	/**

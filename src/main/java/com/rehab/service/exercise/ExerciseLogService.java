@@ -65,16 +65,23 @@ public class ExerciseLogService {
 			.completionRate(request.getCompletionRate())
 			.durationSec(request.getDurationSec())
 			.notes(request.getNotes())
-			.status(ExerciseLogStatus.COMPLETED) // 기본값
+			.status(ExerciseLogStatus.COMPLETED)
 			.build();
 
 		ExerciseLog savedLog = exerciseLogRepository.save(exerciseLog);
 
-		// 일일 요약 업데이트
-		LocalDateTime logDate = request.getLoggedAt().toLocalDate().atTime(LocalTime.now());
-		dailySummaryService.updateDailySummary(userId, logDate);
-
 		log.info("운동 로그 생성 완료 - exerciseLogId: {}", savedLog.getExerciseLogId());
+
+		// 일일 요약 업데이트 (비동기적으로 처리, 실패해도 로그 생성은 성공)
+		try {
+			dailySummaryService.updateDailySummary(userId, request.getLoggedAt());
+			log.info("일일 요약 업데이트 완료 - userId: {}, date: {}",
+				userId, request.getLoggedAt().toLocalDate());
+		} catch (Exception e) {
+			log.error("일일 요약 업데이트 실패 - userId: {}, date: {}, error: {}",
+				userId, request.getLoggedAt().toLocalDate(), e.getMessage(), e);
+			// DailySummary 업데이트 실패해도 운동 로그 생성은 성공으로 처리
+		}
 
 		return convertToExerciseLogResponse(savedLog);
 	}

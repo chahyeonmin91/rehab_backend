@@ -20,15 +20,11 @@ public interface RehabPlanRepository extends JpaRepository<RehabPlan, Long> {
 	/**
 	 * 사용자의 현재 활성 플랜 조회
 	 * ACTIVE 상태인 가장 최근 플랜
+	 * JPQL에서는 LIMIT을 사용할 수 없으므로 First 키워드 사용
 	 */
-	@Query("SELECT rp FROM RehabPlan rp " +
-		"WHERE rp.user.userId = :userId " +
-		"AND rp.status = :status " +
-		"ORDER BY rp.createdAt DESC " +
-		"LIMIT 1")
-	Optional<RehabPlan> findCurrentPlanByUserIdAndStatus(
-		@Param("userId") Long userId,
-		@Param("status") RehabPlanStatus status
+	Optional<RehabPlan> findFirstByUser_UserIdAndStatusOrderByCreatedAtDesc(
+		Long userId,
+		RehabPlanStatus status
 	);
 
 	/**
@@ -36,9 +32,13 @@ public interface RehabPlanRepository extends JpaRepository<RehabPlan, Long> {
 	 */
 	boolean existsByUser_UserId(Long userId);
 
-	// 사용자의 모든 플랜 조회 (최신순)
+	/**
+	 * 사용자의 모든 플랜 조회 (최신순)
+	 */
 	List<RehabPlan> findByUserOrderByCreatedAtDesc(User user);
 
-	// 상태별 조회 (status 필드 추가 시)
-	List<RehabPlan> findByUserAndStatus(User user, String status);
+	/**
+	 * 상태별 조회 - enum 타입
+	 */
+	List<RehabPlan> findByUserAndStatusOrderByCreatedAtDesc(User user, RehabPlanStatus status);
 }

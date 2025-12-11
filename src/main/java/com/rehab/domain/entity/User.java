@@ -127,6 +127,10 @@ public class User extends BaseEntity {
     @Builder.Default
     private List<AuditLog> auditLogs = new ArrayList<>();
 
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
+	private List<DietLog> dietLogs = new ArrayList<>();
+
 	public static User createEmailUser(String email, String encodedPassword) {
 		return User.builder()
 			.email(email)
