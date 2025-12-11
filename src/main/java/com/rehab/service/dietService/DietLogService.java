@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,7 +65,7 @@ public class DietLogService {
 
 		log.info("식단 로그 생성 완료 - dietLogId: {}", savedLog.getDietLogId());
 
-		// ✅ 일일 요약 업데이트
+		// 일일 요약 업데이트
 		try {
 			dailySummaryService.updateDailySummary(userId, request.getLoggedAt());
 			log.info("일일 요약 업데이트 완료 - userId: {}, date: {}",
@@ -81,12 +82,14 @@ public class DietLogService {
 	/**
 	 * 특정 날짜 식단 로그 조회
 	 */
-	public List<DietLogResponse> getDietLogsByDateRange(
-		Long userId, LocalDateTime startDate, LocalDateTime endDate) {
-		log.info("식단 로그 조회 - userId: {}, start: {}, end: {}", userId, startDate, endDate);
+	public List<DietLogResponse> getDietLogsByDate(Long userId, LocalDate date) {
+		log.info("식단 로그 조회 - userId: {}, date: {}", userId, date);
+
+		LocalDateTime startOfDay = date.atStartOfDay();
+		LocalDateTime endOfDay = date.atTime(23, 59, 59);
 
 		List<DietLog> logs = dietLogRepository
-			.findByUser_UserIdAndLoggedAtBetween(userId, startDate, endDate);
+			.findByUser_UserIdAndLoggedAtBetween(userId, startOfDay, endOfDay);
 
 		return logs.stream()
 			.map(this::convertToDietLogResponse)

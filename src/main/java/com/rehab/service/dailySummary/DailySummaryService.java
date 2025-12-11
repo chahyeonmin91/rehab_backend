@@ -67,7 +67,28 @@ public class DailySummaryService {
 
 		DailySummary summary = dailySummaryRepository
 			.findByUser_UserIdAndDate(userId, startOfDay)
-			.orElseThrow(() -> new RehabPlanException(ErrorStatus.DAILY_SUMMARY_NOT_FOUND));
+			.orElseGet(() -> {
+				// DailySummary가 없으면 빈 응답 생성 (DB 저장 X)
+				log.info("DailySummary가 없어 빈 응답을 반환합니다. userId: {}, date: {}", userId, date);
+
+				User user = userRepository.findById(userId)
+					.orElseThrow(() -> new RehabPlanException(ErrorStatus.USER_NOT_FOUND));
+
+				return DailySummary.builder()
+					.summaryId(null) // ID 없음 (저장 안함)
+					.user(user)
+					.date(startOfDay)
+					.allExercisesCompleted(false)
+					.exerciseCompletionRate(0)
+					.allMedicationsTaken(false)
+					.medicationCompletionRate(0)
+					.allDietCompleted(false)
+					.dietCompletionRate(0)
+					.avgPainScore(0)
+					.totalDurationSec(0)
+					.dailyMetrics("{}")
+					.build();
+			});
 
 		return convertToDailySummaryResponse(summary);
 	}
@@ -94,7 +115,39 @@ public class DailySummaryService {
 			.orElse(null);
 
 		if (activePlan == null) {
-			log.warn("활성 플랜이 없어 일일 요약을 업데이트하지 않습니다. userId: {}, date: {}", userId, targetDate);
+			log.warn("활성 플랜이 없습니다. 빈 DailySummary를 생성합니다. userId: {}, date: {}", userId, targetDate);
+
+			// 활성 플랜이 없어도 빈 DailySummary는 생성
+			DailySummary summary = dailySummaryRepository
+				.findByUser_UserIdAndDate(userId, startOfDay)
+				.orElseGet(() -> {
+					Map<String, Object> emptyMetrics = new HashMap<>();
+					emptyMetrics.put("totalExercises", 0);
+					emptyMetrics.put("completedExercises", 0);
+					emptyMetrics.put("avgRpe", 0.0);
+					emptyMetrics.put("totalMedications", 0);
+					emptyMetrics.put("takenMedications", 0);
+					emptyMetrics.put("totalDiets", 0);
+					emptyMetrics.put("completedDiets", 0);
+
+					DailySummary newSummary = DailySummary.builder()
+						.user(user)
+						.date(startOfDay)
+						.allExercisesCompleted(false)
+						.exerciseCompletionRate(0)
+						.allMedicationsTaken(false)
+						.medicationCompletionRate(0)
+						.allDietCompleted(false)
+						.dietCompletionRate(0)
+						.avgPainScore(0)
+						.totalDurationSec(0)
+						.dailyMetrics(convertToJson(emptyMetrics))
+						.build();
+
+					return dailySummaryRepository.save(newSummary);
+				});
+
+			log.info("빈 DailySummary 생성 완료 - summaryId: {}", summary.getSummaryId());
 			return;
 		}
 

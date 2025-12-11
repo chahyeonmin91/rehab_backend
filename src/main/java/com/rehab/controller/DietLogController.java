@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -42,18 +42,16 @@ public class DietLogController {
 	}
 
 	@GetMapping
-	@Operation(summary = "식단 로그 조회", description = "특정 기간의 식단 로그를 조회합니다.")
+	@Operation(summary = "식단 로그 조회", description = "특정 날짜의 식단 로그를 조회합니다.")
 	public ApiResponse<List<DietLogResponse>> getDietLogs(
 		@Parameter(description = "사용자 ID", required = true)
 		@RequestParam Long userId,
-		@Parameter(description = "시작 날짜", required = true)
-		@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-		@Parameter(description = "종료 날짜", required = true)
-		@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+		@Parameter(description = "조회 날짜 (YYYY-MM-DD)", required = true, example = "2025-12-11")
+		@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
-		log.info("GET /api/v1/diet-logs - userId: {}, start: {}, end: {}", userId, startDate, endDate);
+		log.info("GET /api/v1/diet-logs - userId: {}, date: {}", userId, date);
 
-		List<DietLogResponse> response = dietLogService.getDietLogsByDateRange(userId, startDate, endDate);
+		List<DietLogResponse> response = dietLogService.getDietLogsByDate(userId, date);
 
 		return ApiResponse.onSuccess(response);
 	}
