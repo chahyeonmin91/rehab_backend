@@ -20,6 +20,7 @@ public interface DietPlanItemRepository extends JpaRepository<DietPlanItem, Long
 	 * 재활 플랜별 식단 항목 조회 (순서대로)
 	 */
 	List<DietPlanItem> findByRehabPlanOrderByOrderIndex(RehabPlan rehabPlan);
+	List<DietPlanItem> findByRehabPlan_RehabPlanIdOrderByOrderIndex(Long rehabPlanId);
 
 	/**
 	 * 재활 플랜 ID로 식단 항목 조회
@@ -42,4 +43,6 @@ public interface DietPlanItemRepository extends JpaRepository<DietPlanItem, Long
 	 * 재활 플랜의 식단 항목 개수
 	 */
 	int countByRehabPlan(RehabPlan rehabPlan);
+
+	long countByRehabPlan_RehabPlanId(Long rehabPlanId);
 }
